@@ -46,16 +46,16 @@ void write_bit(char n, const int v)
   noInterrupts();
   if(v == 0)
   {
-    PORTB &= (~DWR);
+    PORTB = PORTB & (~DWR);
   }
   else
   {
-    PORTB |= DWR;
+    PORTB = PORTB | DWR;
   }
   PORTD = ((n << 3) & (~ENABLE));
-  PORTD |= ENABLE; // Enable separately to be safe.
+  PORTD = PORTD | ENABLE; // Enable separately to be safe.
   delayMicroseconds(WRITE_ON_US);
-  PORTD &= (~ENABLE);
+  PORTD = PORTD & (~ENABLE);
   delayMicroseconds(WRITE_OFF_US);
   interrupts();
 }

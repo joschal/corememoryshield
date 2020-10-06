@@ -21,8 +21,9 @@
 #define ADDRSIZE      5
 #define WORDSIZE      (1 << ADDRSIZE)
 #define ENABLE        B00000100 // PORTD
-#define DRD           B00000010 // PORTB
 #define DWR           B00000001 // PORTB
+
+#define DEBUG         0
 
 static unsigned int WRITE_ON_US  = 3;
 static unsigned int WRITE_OFF_US = 25; // Gives the capacitor on the 5V rail a while to recharge
@@ -35,15 +36,15 @@ static char trace_core_calls_p = 0;
 
 void write_bit(char n, const int v)
 {
-  if (trace_core_calls_p)
-  {
+  if (trace_core_calls_p) {
     char buf[64];
-    sprintf(buf, "x[0%02d] <- %d", n, v);
+    sprintf(buf, "writing value %d to address x[0%02d]", v, n);
     Serial.println(buf);
   }
 
   // Assert 0 <= n <= 31, v == 0 or 1.
   noInterrupts();
+
   if(v == 0)
   {
     PORTB = PORTB & (~DWR);
@@ -57,6 +58,7 @@ void write_bit(char n, const int v)
   delayMicroseconds(WRITE_ON_US);
   PORTD = PORTD & (~ENABLE);
   delayMicroseconds(WRITE_OFF_US);
+
   interrupts();
 }
 
@@ -64,7 +66,8 @@ int exchg_bit(char n, const int v)
 {
   write_bit(n, v);
 
-  if(PINB & DRD)
+  // If pin 9 is high, the value was a 1
+  if(digitalRead(9))
   {
     // Switching occurred so core held opposite of
     // what we just set it to.
@@ -96,8 +99,11 @@ int read_bit(const int n)
   }
 
   write_bit(n, 0);
-  if(PINB & DRD)
-  {
+
+  // If pin 9 is high, the core held a 1
+  int digitalPinValue = digitalRead(9);
+
+  if (digitalPinValue){
     // Switching occurred so core held 1.
 
     if (trace_core_calls_p)
@@ -593,7 +599,7 @@ void setup(void)
   DDRB  = DWR;
   
   Serial.begin(115200);
-  randomSeed(0xdeadbeef);
+  randomSeed(0xcafecafe);
   Serial.println("Welcome! If you're new, try using the commands 'r', 'w', 't' and 'R', 'W', 'T' to get started.");
 }
 

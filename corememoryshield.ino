@@ -20,10 +20,6 @@
 
 #define ADDRSIZE      5
 #define WORDSIZE      (1 << ADDRSIZE)
-#define ENABLE        B00000100 // PORTD
-#define DWR           B00000001 // PORTB
-
-#define DEBUG         0
 
 static unsigned int WRITE_ON_US  = 3;
 static unsigned int WRITE_OFF_US = 25; // Gives the capacitor on the 5V rail a while to recharge
@@ -34,6 +30,10 @@ static int n_test_iters = 1000;
 static char report_errors_p = 0;
 static char trace_core_calls_p = 0;
 
+/*
+	n	address to write to
+	v	value to write
+*/
 void write_bit(char n, const int v)
 {
   if (trace_core_calls_p) {
@@ -44,19 +44,26 @@ void write_bit(char n, const int v)
 
   // Assert 0 <= n <= 31, v == 0 or 1.
   noInterrupts();
+  if(v == 0) {
+    digitalWrite(8, LOW);
+  } else {
+    digitalWrite(8, HIGH);
+  }
 
-  if(v == 0)
-  {
-    PORTB = PORTB & (~DWR);
-  }
-  else
-  {
-    PORTB = PORTB | DWR;
-  }
-  PORTD = ((n << 3) & (~ENABLE));
-  PORTD = PORTD | ENABLE; // Enable separately to be safe.
+  // Disable
+  digitalWrite(2,LOW);
+  
+  //Write address  
+  digitalWrite(3,bitRead(n, 0));
+  digitalWrite(4,bitRead(n, 1));
+  digitalWrite(5,bitRead(n, 2));
+  digitalWrite(6,bitRead(n, 3));
+  digitalWrite(7,bitRead(n, 4));
+
+  // Toggle enable pin
+  digitalWrite(2, HIGH);
   delayMicroseconds(WRITE_ON_US);
-  PORTD = PORTD & (~ENABLE);
+  digitalWrite(2, LOW);
   delayMicroseconds(WRITE_OFF_US);
 
   interrupts();
@@ -594,9 +601,20 @@ static void U_test()
 
 void setup(void) 
 {
-  DDRD  = B11111100;
-  PORTD = (~ENABLE);
-  DDRB  = DWR;
+  // set OUTPUT pins
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
+
+  // Set INPUT pins
+  pinMode(9, INPUT);
+
+  // Set write pin to LOW -> disable  
+  digitalWrite(2,LOW);
   
   Serial.begin(115200);
   randomSeed(0xcafecafe);

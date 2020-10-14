@@ -3,6 +3,7 @@
 // Copyright 2011 Ben North and Oliver Nash.
 //
 // Modified by Jussi Kilpeläinen 2019-10-31 for his own core memory shield (http://jussikilpelainen.kapsi.fi/?p=213)
+// Modified by joschal in 2020 do make the code more readable and therefore accessible to a wider audience
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
